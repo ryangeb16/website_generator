@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from node_delimiter import split_nodes_delimiter
+from inline_markdown import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -43,7 +43,36 @@ class TestSplitNodesDelimiter(unittest.TestCase):
             TextNode(" has multiple ", TextType.TEXT),
             TextNode("italics", TextType.ITALIC)
         ])
+    
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
 
+    def test_extract_markdown_2images(self):
+        matches = extract_markdown_images(
+            "This is text with one ![image](https://i.imgur.com/zjjcJKZ.png) and another ![image](https://www.boot.dev/img/bootdev-logo-full-150.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png"),("image","https://www.boot.dev/img/bootdev-logo-full-150.png")], matches)
+
+    def test_extract_markdown_0images(self):
+        matches = extract_markdown_images(
+            "This is text without an image"
+        )
+        self.assertListEqual([], matches)
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a [link](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("link", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_links_on_image(self):
+        matches = extract_markdown_links(
+            "This is text with a [link](https://i.imgur.com/zjjcJKZ.png) and an ![image](https://www.boot.dev/img/bootdev-logo-full-150.png)"
+        )
+        self.assertListEqual([("link", "https://i.imgur.com/zjjcJKZ.png")], matches)
 
 if __name__ == "__main__":
     unittest.main()
